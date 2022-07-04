@@ -19,6 +19,8 @@ def show_image(img, figsize=(10, 10)):
 
 
 def process():
+    # class_name需要与你的训练样本的两个动作状态图像文件夹的名字中的一个保持一致，它后面将用于分类时的索引。
+    # 具体是哪个动作文件夹的名字取决于你的运动是什么，例如：如果是深蹲，明显比较重要的判断计数动作是蹲下去；如果是引体向上，则判断计数的动作是向上拉到最高点的那个动作
     class_name = 'squat_down'
     out_video_path = 'squat-sample-out.mp4'
 
