@@ -20,49 +20,48 @@ def show_image(img, figsize=(10, 10)):
 
 # 提取训练集关键点坐标
 class BootstrapHelper(object):
-    """Helps to bootstrap images and filter pose samples for classification."""
+    # 引导训练样本图像和过滤姿势样本以进行分类
 
     def __init__(self,
-                 images_in_folder,
-                 images_out_folder,
+                 images_in_folder,      # 训练样本图像
+                 images_out_folder,     # 标好关键点的训练样本图像
                  csvs_out_folder):
         self._images_in_folder = images_in_folder
         self._images_out_folder = images_out_folder
-        self._csvs_out_folder = csvs_out_folder
+        self._csvs_out_folder = csvs_out_folder     # 通过样本图像提取的特征值作为训练集写入csv文件
 
-        # Get list of pose classes and print image statistics.
+        # 获取姿势类列表（squat_down和squat_up）并打印图像统计信息。
         self._pose_class_names = sorted([n for n in os.listdir(self._images_in_folder) if not n.startswith('.')])
 
     def bootstrap(self, per_pose_class_limit=None):
-        """Bootstraps images in a given folder.
+        # 在给定文件夹中引导图像
+        # 文件夹中的所需图像:
+        # squat_up /
+        #     image_001.jpg
+        #     image_002.jpg
+        #     ...
+        #
+        # squat_down /
+        #     image_001.jpg
+        #     image_002.jpg
+        #     ...
 
-        Required image in folder (same use for image out folder):
-          pushups_up/
-            image_001.jpg
-            image_002.jpg
-            ...
-          pushups_down/
-            image_001.jpg
-            image_002.jpg
-            ...
-          ...
+        # 生成的CSV输出文件夹：
+        #     pushups_up.csv
+        #     pushups_down.csv
 
-        Produced CSVs out folder:
-          pushups_up.csv
-          pushups_down.csv
+        # 生成的带有姿势的3D landmarks的CSV结构：
+        #     sample_00001, x1, y1, z1, x2, y2, z2, ....
+        #     sample_00002, x1, y1, z1, x2, y2, z2, ....
 
-        Produced CSV structure with pose 3D landmarks:
-          sample_00001,x1,y1,z1,x2,y2,z2,....
-          sample_00002,x1,y1,z1,x2,y2,z2,....
-        """
-        # Create output folder for CVSs.
+        # 为 CSV文件创建输出文件夹.
         if not os.path.exists(self._csvs_out_folder):
             os.makedirs(self._csvs_out_folder)
 
         for pose_class_name in self._pose_class_names:
             print('Bootstrapping ', pose_class_name, file=sys.stderr)
 
-            # Paths for the pose class.
+            # 两类姿势的路径。
             images_in_folder = os.path.join(self._images_in_folder, pose_class_name)
             images_out_folder = os.path.join(self._images_out_folder, pose_class_name)
             csv_out_path = os.path.join(self._csvs_out_folder, pose_class_name + '.csv')
@@ -71,25 +70,24 @@ class BootstrapHelper(object):
 
             with open(csv_out_path, 'w', newline='') as csv_out_file:
                 csv_out_writer = csv.writer(csv_out_file, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-                # Get list of images.
+                # 获取图片列表.
                 image_names = sorted([n for n in os.listdir(images_in_folder) if not n.startswith('.')])
-                # print(image_names)
+                # per_pose_class_limit用于方便调试
                 if per_pose_class_limit is not None:
                     image_names = image_names[:per_pose_class_limit]
 
-                # Bootstrap every image.
+                # 引导提取每个图像.
                 for image_name in tqdm.tqdm(image_names):
-                # for image_name in image_names:
                     # Load image.
                     input_frame = cv2.imread(os.path.join(images_in_folder, image_name))
                     input_frame = cv2.cvtColor(input_frame, cv2.COLOR_BGR2RGB)
 
-                    # Initialize fresh pose tracker and run it.
+                    # 把图片放入1姿势检测模型中并返回33个landmarks的x,y,z坐标.
                     with mp_pose.Pose() as pose_tracker:
                         result = pose_tracker.process(image=input_frame)
                         pose_landmarks = result.pose_landmarks
 
-                    # Save image with pose prediction (if pose was detected).
+                    # 使用保存图像中检测的姿势（如果检测到姿势）。
                     output_frame = input_frame.copy()
                     if pose_landmarks is not None:
                         mp_drawing.draw_landmarks(
@@ -99,20 +97,20 @@ class BootstrapHelper(object):
                     output_frame = cv2.cvtColor(output_frame, cv2.COLOR_RGB2BGR)
                     cv2.imwrite(os.path.join(images_out_folder, image_name), output_frame)
 
-                    # Save landmarks if pose was detected.
+                    # 如果检测到姿势，则保存landmarks.
                     if pose_landmarks is not None:
-                        # Get landmarks.
+                        # 获取 图像的高和宽.
                         frame_height, frame_width = output_frame.shape[0], output_frame.shape[1]
+                        # 获取关键点在图像中的真实坐标
                         pose_landmarks = np.array(
                             [[lmk.x * frame_width, lmk.y * frame_height, lmk.z * frame_width]
                              for lmk in pose_landmarks.landmark],
                             dtype=np.float32)
                         assert pose_landmarks.shape == (33, 3), 'Unexpected landmarks shape: {}'.format(
                             pose_landmarks.shape)
-                        # print(image_name, pose_landmarks)
                         csv_out_writer.writerow([image_name] + pose_landmarks.flatten().astype(np.str).tolist())
 
-                    # Draw XZ projection and concatenate with the image.
+                    # 绘制 XZ 投影并与图像连接。
                     projection_xz = self._draw_xz_projection(
                         output_frame=output_frame, pose_landmarks=pose_landmarks)
                     output_frame = np.concatenate((output_frame, projection_xz), axis=1)
@@ -141,9 +139,7 @@ class BootstrapHelper(object):
         return np.asarray(img)
 
     def align_images_and_csvs(self, print_removed_items=False):
-        """Makes sure that image folders and CSVs have the same sample.
-
-        Leaves only intersetion of samples in both image folders and CSVs.
+        """确保图像文件夹和 CSV 具有相同的样本。仅在图像文件夹和 CSV 中保留样本的交集。
         """
         for pose_class_name in self._pose_class_names:
             # Paths for the pose class.
@@ -157,14 +153,13 @@ class BootstrapHelper(object):
                 for row in csv_out_reader:
                     rows.append(row)
 
-            # Image names left in CSV.
+            # CSV中的图像名字
             image_names_in_csv = []
 
-            # Re-write the CSV removing lines without corresponding images.
+            # 重写没有相应图像的 CSV 中的行，将它删除.
             with open(csv_out_path, 'w', newline='') as csv_out_file:
                 csv_out_writer = csv.writer(csv_out_file, delimiter=',', quoting=csv.QUOTE_MINIMAL)
                 for row in rows:
-                    # print(row)
                     image_name = row[0]
                     image_path = os.path.join(images_out_folder, image_name)
                     if os.path.exists(image_path):
@@ -173,7 +168,7 @@ class BootstrapHelper(object):
                     elif print_removed_items:
                         print('Removed image from CSV: ', image_path)
 
-            # Remove images without corresponding line in CSV.
+            # 删除 CSV 中没有对应行的图像.
             for image_name in os.listdir(images_out_folder):
                 if image_name not in image_names_in_csv:
                     image_path = os.path.join(images_out_folder, image_name)
@@ -182,10 +177,8 @@ class BootstrapHelper(object):
                         print('Removed image from folder: ', image_path)
 
     def analyze_outliers(self, outliers):
-        """Classifies each sample agains all other to find outliers.
-
-        If sample is classified differrrently than the original class - it sould
-        either be deleted or more similar samples should be aadded.
+        """将每个样本与所有其他样本进行分类以找出异常值.
+        如果样本的分类与原始类别不同 - 它应该被删除或应该添加更多类似的样本.
         """
         for outlier in outliers:
             image_path = os.path.join(self._images_out_folder, outlier.sample.class_name, outlier.sample.name)
@@ -201,17 +194,17 @@ class BootstrapHelper(object):
             show_image(img, figsize=(20, 20))
 
     def remove_outliers(self, outliers):
-        """Removes outliers from the image folders."""
+        """从图像文件夹中删除异常值。"""
         for outlier in outliers:
             image_path = os.path.join(self._images_out_folder, outlier.sample.class_name, outlier.sample.name)
             os.remove(image_path)
 
     def print_images_in_statistics(self):
-        """Prints statistics from the input image folder."""
+        """从输入图像文件夹打印统计信息。"""
         self._print_images_statistics(self._images_in_folder, self._pose_class_names)
 
     def print_images_out_statistics(self):
-        """Prints statistics from the output image folder."""
+        """从输出图像文件夹打印统计信息."""
         self._print_images_statistics(self._images_out_folder, self._pose_class_names)
 
     def _print_images_statistics(self, images_folder, pose_class_names):

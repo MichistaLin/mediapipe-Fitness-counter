@@ -1,6 +1,6 @@
 # 姿态分类结果平滑
 class EMADictSmoothing(object):
-    """Smoothes pose classification."""
+    """平滑姿势分类。"""
 
     def __init__(self, window_size=10, alpha=0.2):
         self._window_size = window_size
@@ -9,11 +9,9 @@ class EMADictSmoothing(object):
         self._data_in_window = []
 
     def __call__(self, data):
-        """Smoothes given pose classification.
+        """平滑给定的姿势分类。
 
-        Smoothing is done by computing Exponential Moving Average for every pose
-        class observed in the given time window. Missed pose classes arre replaced
-        with 0.
+        平滑是通过计算在给定时间窗口中观察到的每个姿势类别的指数移动平均值来完成的。错过的姿势类将替换为 0。
 
         Args:
           data: Dictionary with pose classification. Sample:
@@ -30,7 +28,7 @@ class EMADictSmoothing(object):
               'pushups_up': 1.7,
             }
         """
-        # Add new data to the beginning of the window for simpler code.
+        # 将新数据添加到窗口的开头以获得更简单的代码.
         self._data_in_window.insert(0, data)
         self._data_in_window = self._data_in_window[:self._window_size]
 

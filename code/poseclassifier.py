@@ -24,7 +24,7 @@ class PoseSampleOutlier(object):
 
 
 class PoseClassifier(object):
-    """Classifies pose landmarks."""
+    """对landmarks进行分类."""
 
     def __init__(self,
                  pose_samples_folder,
@@ -39,6 +39,7 @@ class PoseClassifier(object):
         self._pose_embedder = pose_embedder
         self._n_landmarks = n_landmarks
         self._n_dimensions = n_dimensions
+        # KNN算法中的K
         self._top_n_by_max_distance = top_n_by_max_distance
         self._top_n_by_mean_distance = top_n_by_mean_distance
         self._axes_weights = axes_weights
@@ -71,12 +72,12 @@ class PoseClassifier(object):
           sample_00002,x1,y1,z1,x2,y2,z2,....
           ...
         """
-        # Each file in the folder represents one pose class.
+        # 文件夹中的每个文件代表一个姿势类.
         file_names = [name for name in os.listdir(pose_samples_folder) if name.endswith(file_extension)]
 
         pose_samples = []
         for file_name in file_names:
-            # Use file name as pose class name.
+            # 使用文件名作为姿势类名称.
             class_name = file_name[:-(len(file_extension) + 1)]
 
             # Parse CSV.
@@ -95,56 +96,49 @@ class PoseClassifier(object):
         return pose_samples
 
     def find_pose_sample_outliers(self):
-        """Classifies each sample against the entire database."""
-        # Find outliers in target poses
+        """针对整个数据库对每个样本进行分类."""
+        # 找出目标姿势中的异常值
         outliers = []
         for sample in self._pose_samples:
-            # Find nearest poses for the target one.
+            # 为目标找到最近的姿势。
             pose_landmarks = sample.landmarks.copy()
             pose_classification = self.__call__(pose_landmarks)
             class_names = [class_name for class_name, count in pose_classification.items() if
                            count == max(pose_classification.values())]
 
-            # Sample is an outlier if nearest poses have different class or more than
-            # one pose class is detected as nearest.
+            # 如果最近的姿势具有不同的类别或多个姿势类别被检测为最近，则样本是异常值。
             if sample.class_name not in class_names or len(class_names) != 1:
                 outliers.append(PoseSampleOutlier(sample, class_names, pose_classification))
 
         return outliers
 
     def __call__(self, pose_landmarks):
-        """Classifies given pose.
+        """对给定的姿势进行分类。
 
-        Classification is done in two stages:
-          * First we pick top-N samples by MAX distance. It allows to remove samples
-            that are almost the same as given pose, but has few joints bent in the
-            other direction.
-          * Then we pick top-N samples by MEAN distance. After outliers are removed
-            on a previous step, we can pick samples that are closes on average.
+        分类分两个阶段完成:
+          * 首先，我们按 MAX 距离选取前 N 个样本。 它允许删除与给定姿势几乎相同但有一些关节在向一个方向弯曲的样本。
+          * 然后我们按平均距离选择前 N 个样本。 在上一步移除异常值后， 我们可以选择在平均值上接近的样本。
 
-        Args:
-          pose_landmarks: NumPy array with 3D landmarks of shape (N, 3).
+        Args（参数）:
+          pose_landmarks: NumPy array with 3D landmarks of shape (N, 3).具有形状 (N, 3) 的 3D landmarks的 NumPy 数组
 
         Returns:
-          Dictionary with count of nearest pose samples from the database. Sample:
+          Dictionary with count of nearest pose samples from the database.含数据库中最近姿势样本计数的字典 Sample:
             {
               'pushups_down': 8,
               'pushups_up': 2,
             }
         """
-        # Check that provided and target poses have the same shape.
+        # 检查提供的姿势和目标姿势是否具有相同的形状.
         assert pose_landmarks.shape == (self._n_landmarks, self._n_dimensions), 'Unexpected shape: {}'.format(
             pose_landmarks.shape)
 
-        # Get given pose embedding.
+        # 获取给定姿势的 embedding.
         pose_embedding = self._pose_embedder(pose_landmarks)
         flipped_pose_embedding = self._pose_embedder(pose_landmarks * np.array([-1, 1, 1]))
 
-        # Filter by max distance.
-        #
-        # That helps to remove outliers - poses that are almost the same as the
-        # given one, but has one joint bent into another direction and actually
-        # represnt a different pose class.
+        # 按最大距离过滤。
+        # 这有助于去除异常值——与给定的姿势几乎相同，但一个关节弯曲到另一个方向，实际上代表不同的姿势类别。
         max_dist_heap = []
         for sample_idx, sample in enumerate(self._pose_samples):
             max_dist = min(
@@ -156,9 +150,8 @@ class PoseClassifier(object):
         max_dist_heap = sorted(max_dist_heap, key=lambda x: x[0])
         max_dist_heap = max_dist_heap[:self._top_n_by_max_distance]
 
-        # Filter by mean distance.
-        #
-        # After removing outliers we can find the nearest pose by mean distance.
+        # 按平均距离过滤。
+        # 去除异常值后，我们可以通过平均距离找到最近的姿势。
         mean_dist_heap = []
         for _, sample_idx in max_dist_heap:
             sample = self._pose_samples[sample_idx]

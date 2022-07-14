@@ -1,18 +1,18 @@
 # 动作计数器
 class RepetitionCounter(object):
-    """Counts number of repetitions of given target pose class."""
+    # 计算给定目标姿势类的重复次数
 
     def __init__(self, class_name, enter_threshold=6, exit_threshold=4):
         self._class_name = class_name
 
-        # If pose counter passes given threshold, then we enter the pose.
+        # 如果姿势通过了给定的阈值，那么我们就进入该动作的计数
         self._enter_threshold = enter_threshold
         self._exit_threshold = exit_threshold
 
-        # Either we are in given pose or not.
+        # 是否处于给定的姿势
         self._pose_entered = False
 
-        # Number of times we exited the pose.
+        # 退出姿势的次数
         self._n_repeats = 0
 
     @property
@@ -20,37 +20,31 @@ class RepetitionCounter(object):
         return self._n_repeats
 
     def __call__(self, pose_classification):
-        """Counts number of repetitions happend until given frame.
+        # 计算给定帧之前发生的重复次数
+        # 我们使用两个阈值。首先，您需要从较高的位置上方进入姿势，然后您需要从较低的位置下方退出。
+        # 阈值之间的差异使其对预测抖动稳定（如果只有一个阈值，则会导致错误计数）。
 
-        We use two thresholds. First you need to go above the higher one to enter
-        the pose, and then you need to go below the lower one to exit it. Difference
-        between the thresholds makes it stable to prediction jittering (which will
-        cause wrong counts in case of having only one threshold).
+        # 参数：
+        #   pose_classification：当前帧上的姿势分类字典
+        #         Sample:
+        #         {
+        #             'squat_down': 8.3,
+        #             'squat_up': 1.7,
+        #         }
 
-        Args:
-          pose_classification: Pose classification dictionary on current frame.
-            Sample:
-              {
-                'pushups_down': 8.3,
-                'pushups_up': 1.7,
-              }
-
-        Returns:
-          Integer counter of repetitions.
-        """
-        # Get pose confidence.
+        # 获取姿势的置信度.
         pose_confidence = 0.0
         if self._class_name in pose_classification:
             pose_confidence = pose_classification[self._class_name]
 
         # On the very first frame or if we were out of the pose, just check if we
         # entered it on this frame and update the state.
+        # 在第一帧或者如果我们不处于姿势中，只需检查我们是否在这一帧上进入该姿势并更新状态
         if not self._pose_entered:
             self._pose_entered = pose_confidence > self._enter_threshold
             return self._n_repeats
 
-        # If we were in the pose and are exiting it, then increase the counter and
-        # update the state.
+        # 如果我们处于姿势并且正在退出它，则增加计数器并更新状态
         if pose_confidence < self._exit_threshold:
             self._n_repeats += 1
             self._pose_entered = False

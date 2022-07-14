@@ -47,7 +47,7 @@ def process():
     pose_embedder = pe.FullBodyPoseEmbedder()
 
     # Initialize classifier.
-    # Ceck that you are using the same parameters as during bootstrapping.
+    # Check that you are using the same parameters as during bootstrapping.
     pose_classifier = pc.PoseClassifier(
         pose_samples_folder=pose_samples_folder,
         pose_embedder=pose_embedder,
