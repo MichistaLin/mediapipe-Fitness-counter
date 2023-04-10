@@ -10,9 +10,7 @@
 
 本项目的测试环境：win10，python3.7，mediapipe0.8.10，pycharm
 
-文件夹中的venv是本项目的虚拟环境，里面包含了程序需要用到的所有库，这个文件夹比较大（321MB）。整个项目压缩后也达到了107MB，所以网络不是很通畅的朋友如果想研究学习的话，可以到网盘下载：
-
-[mediapipe-Fitness-counter]: https://www.123pan.com/s/XuubVv-CYmvd.html
+文件夹中的venv是本项目的虚拟环境，里面包含了程序需要用到的所有库，这个文件夹比较大（321MB）。整个项目压缩后也达到了107MB，所以网络不是很通畅的朋友如果想研究学习的话，可以到123网盘下载：<a href="https://www.123pan.com/s/XuubVv-CYmvd.html">mediapipe-Fitness-counter</a>
 
 <font color='#fc5531'>功能：由于使用的是KNN算法而不是根据各个运动的特点计算骨骼之间的角度来判断动作是否完成，因此本项目可以直接计数引体向上、深蹲和俯卧撑这几种健身运动而几乎无需修改代码，只需要输入视频或调用摄像头时选择一下是哪个运动即可，非常滴好用。</font>
 
