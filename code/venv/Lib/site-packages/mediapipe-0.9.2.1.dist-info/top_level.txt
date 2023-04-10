@@ -1,0 +1,4 @@
+mediapipe
+mediapipe\python\_framework_bindings
+mediapipe\tasks\cc\metadata\python\_pywrap_metadata_version
+mediapipe\tasks\python\metadata\flatbuffers_lib\_pywrap_flatbuffers
