@@ -36,7 +36,7 @@ def process(flag):
         out_video_path = './video-output/squat-sample-out-' + mkfile_time +'.mp4'
     elif flag == 3:
         class_name = 'pull_up'
-        out_video_path = './video-output/squat-sample-out-' + mkfile_time +'.mp4'
+        out_video_path = './video-output/pullup-sample-out-' + mkfile_time +'.mp4'
     cv2.namedWindow('video', cv2.WINDOW_NORMAL)
     video_cap = cv2.VideoCapture(0)
 

@@ -108,7 +108,7 @@ class BootstrapHelper(object):
                             dtype=np.float32)
                         assert pose_landmarks.shape == (33, 3), 'Unexpected landmarks shape: {}'.format(
                             pose_landmarks.shape)
-                        csv_out_writer.writerow([image_name] + pose_landmarks.flatten().astype(np.str).tolist())
+                        csv_out_writer.writerow([image_name] + pose_landmarks.flatten().astype(np.str_).tolist())
 
                     # 绘制 XZ 投影并与图像连接。
                     projection_xz = self._draw_xz_projection(

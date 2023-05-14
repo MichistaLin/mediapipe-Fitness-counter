@@ -36,7 +36,7 @@ def video_process(video_path, flag):
         out_video_path = './video-output/squat-sample-out-' + mkfile_time +'.mp4'
     elif flag == 3:
         class_name = 'pull_up'
-        out_video_path = './video-output/squat-sample-out-' + mkfile_time +'.mp4'
+        out_video_path = './video-output/pullup-sample-out-' + mkfile_time +'.mp4'
 
     # Open the video.
 
