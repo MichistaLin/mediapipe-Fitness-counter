@@ -170,6 +170,6 @@ def process(flag):
     pose_tracker.close()
 
     # Show the last frame of the video.
-    if output_frame is not None:
-        show_image(output_frame)
-
+    # if output_frame is not None:
+    #     show_image(output_frame)
+    print(f"视频处理结束，输出保存在{out_video_path}")
