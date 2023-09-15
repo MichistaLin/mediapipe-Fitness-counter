@@ -29,6 +29,7 @@ class PoseClassifier(object):
     def __init__(self,
                  pose_samples_folder,
                  pose_embedder,
+                 class_name,
                  file_extension='csv',
                  file_separator=',',
                  n_landmarks=33,
@@ -45,6 +46,7 @@ class PoseClassifier(object):
         self._axes_weights = axes_weights
 
         self._pose_samples = self._load_pose_samples(pose_samples_folder,
+                                                     class_name,
                                                      file_extension,
                                                      file_separator,
                                                      n_landmarks,
@@ -53,6 +55,7 @@ class PoseClassifier(object):
 
     def _load_pose_samples(self,
                            pose_samples_folder,
+                           class_n,
                            file_extension,
                            file_separator,
                            n_landmarks,
@@ -72,8 +75,9 @@ class PoseClassifier(object):
           sample_00002,x1,y1,z1,x2,y2,z2,....
           ...
         """
+        classname = class_n.split('_')[0]
         # 文件夹中的每个文件代表一个姿势类.
-        file_names = [name for name in os.listdir(pose_samples_folder) if name.endswith(file_extension)]
+        file_names = [name for name in os.listdir(pose_samples_folder) if classname in name and name.endswith(file_extension)]
 
         pose_samples = []
         for file_name in file_names:

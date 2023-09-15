@@ -95,19 +95,13 @@ csv文件
 
 ![](./markdown_needed/class_name.jpg)
 
-由于最近没时间去拍摄引体向上的样本图片，所以引体向上的csv文件还没生成，如果您已经拍摄了的话，可以自己生成引体向上的csv文件，样本图片文件夹建议您这样命名（这样就不用修改代码），每一张图片可以自定义命名：
 
-```python
-|---fitness_poses_images_in（建议按这个名字）
-	|---pull_down（建议按这个名字）
-    	-001.jpg
-        -002.jpg
-        ...
-    |---pull_up（建议按这个名字）
-    	-001.jpg
-        -002.jpg
-        ...
-```
+
+运行结果：
+
+
+
+![](./markdown_needed/run.png)
 
 
 

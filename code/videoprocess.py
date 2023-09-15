@@ -66,6 +66,7 @@ def video_process(video_path, flag):
     pose_classifier = pc.PoseClassifier(
         pose_samples_folder=pose_samples_folder,
         pose_embedder=pose_embedder,
+        class_name=class_name,
         top_n_by_max_distance=30,
         top_n_by_mean_distance=10)
 

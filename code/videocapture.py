@@ -63,6 +63,7 @@ def process(flag):
     # Check that you are using the same parameters as during bootstrapping.
     pose_classifier = pc.PoseClassifier(
         pose_samples_folder=pose_samples_folder,
+        class_name=class_name,
         pose_embedder=pose_embedder,
         top_n_by_max_distance=30,
         top_n_by_mean_distance=10)
